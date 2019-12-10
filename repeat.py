@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-for root, dirs, files in os.walk("/Users/thijs/projects/python/lucy"):
+for root, dirs, files in os.walk("resources/lucy"):
     for name in files:
         inputPath = os.path.join(root, name)
         outputPath = os.path.join(root, "result", "la_muse" + name)
