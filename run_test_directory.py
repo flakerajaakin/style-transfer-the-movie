@@ -52,48 +52,64 @@ def check_args(args):
         return None
 
     # --output
-    dirname = os.path.dirname(args.output)
-    try:
-        if len(dirname) > 0:
-            os.stat(dirname)
-    except:
-        os.mkdir(dirname)
+    os.makedirs(args.output, exist_ok=True)
 
     return args
 
+
+def file_list(args):
+    files = []
+    for (dirpath, dirnames, filenames) in os.walk(args.content):
+        for file in filenames:
+            files.append((dirpath, file))
+        break
+
+    return files
+
 """main"""
 def main():
-
+    start_time_overall = time.time()
     # parse arguments
     args = parse_args()
     if args is None:
         exit()
 
-    # load content image
-    print(args.content)
-    content_image = utils.load_image(args.content, max_size=args.max_size)
+    files = file_list(args)
 
-    # open session
-    soft_config = tf.ConfigProto(allow_soft_placement=True)
-    soft_config.gpu_options.allow_growth = True # to deal with large image
-    sess = tf.Session(config=soft_config)
+    for (path, fileName) in files:
+        print("path: %s" % path)
+        print("fileName: %s" % fileName)
+        # open session
+        tf.variable_scope("conv1/weight", reuse=tf.AUTO_REUSE)
+        soft_config = tf.ConfigProto(allow_soft_placement=True)
+        soft_config.gpu_options.allow_growth = True # to deal with large image
+        sess = tf.Session(config=soft_config)
+        
+        # load content image
+        inputFile = "%s\\%s" % (path, fileName)
+        print("inputFile: %s" % inputFile)
+        content_image = utils.load_image(inputFile, max_size=args.max_size)
 
-    # build the graph
-    transformer = style_transfer_tester.StyleTransferTester(session=sess,
-                                                            model_path=args.style_model,
-                                                            content_image=content_image,
-                                                            )
-    # execute the graph
-    start_time = time.time()
-    output_image = transformer.test()
-    end_time = time.time()
+        # build the graph
+        transformer = style_transfer_tester.StyleTransferTester(session=sess,
+                                                                model_path=args.style_model,
+                                                                content_image=content_image,
+                                                                )
+        # execute the graph
+        start_time = time.time()
+        output_image = transformer.test()
+        end_time = time.time()
 
-    # save result
-    utils.save_image(output_image, args.output)
+        # save result
+        output_file = args.output + "\\" + fileName
+        utils.save_image(output_image, output_file)
 
-    # report execution time
-    shape = content_image.shape #(batch, width, height, channel)
-    print('Execution time for a %d x %d image : %f msec' % (shape[0], shape[1], 1000.*float(end_time - start_time)/60))
+        # report execution time
+        shape = content_image.shape #(batch, width, height, channel)
+        print('Execution time for a %d x %d image : %f msec' % (shape[0], shape[1], 1000.*float(end_time - start_time)/60))
+
+    end_time_overall = time.time()
+    print('Execution time overall: %f msec' % (1000.*float(end_time_overall - start_time_overall)/60))
 
 if __name__ == '__main__':
     main()

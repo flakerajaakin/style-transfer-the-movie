@@ -20,6 +20,8 @@ class StyleTransferTester:
         self._build_graph()
 
     def _build_graph(self):
+        # reset graph for reuse
+        # tf.reset_default_graph()
 
         # graph input
         self.x = tf.placeholder(tf.float32, shape=self.x0.shape, name='input')

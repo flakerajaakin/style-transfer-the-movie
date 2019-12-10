@@ -70,5 +70,6 @@ python run_test.py --content resources\thijs.jpg --style_model models/udnie.ckpt
 
 
 
+python run_test_directory.py --content resources\lucy --style_model models/la_muse.ckpt --output results\lucy --max_size=1024
 
-
+python convert.py
